@@ -91,7 +91,7 @@ def write_xls_dict(module, dest, create, workbook, worksheet, data):
     # - Iterate through the list of dict that was passed as data and write to the
     #     spreadsheet.
     # - If a new workbook was created in the process, delete the default
-    #     spreadseet that gets created and save the file before exiting the module.
+    #     spreadsheet that gets created and save the file before exiting the module.
     # TODO: Add support for dry run mode and diff computation.
     """
     # Variable to track if a change occured.
@@ -201,7 +201,7 @@ def main():
     data = params["data"]
     create = params["create"]
     # Ensure that the required parameters are passed and error out with an
-    # appriopriate message if they are not.
+    # appropriate message if they are not.
     if path is None:
         module.fail_json(msg="path is required")
     if workbook is None:
