@@ -79,30 +79,29 @@ EXAMPLES = """
 
 def read_xls_dict(input_file):
     "Read the XLS file and return as Ansible facts"
-    result = {"ansible_facts": {}}
     spreadsheet = {}
     try:
         wb = openpyxl.load_workbook(input_file, data_only=True)
         for sheet in wb.sheetnames:
-            ansible_sheet_name = "spreadsheet_" + sheet
+            ansible_sheet_name = f"spreadsheet_{sheet}"
             spreadsheet[ansible_sheet_name] = []
             current_sheet = wb[sheet]
-            dict_keys = []
-            for c in range(1, current_sheet.max_column + 1):
-                dict_keys.append(current_sheet.cell(row=1, column=c).value)
+            dict_keys = [
+                current_sheet.cell(row=1, column=c).value
+                for c in range(1, current_sheet.max_column + 1)
+            ]
             for r in range(2, current_sheet.max_row + 1):
                 temp_dict = {}
                 for c in range(1, current_sheet.max_column + 1):
-                    value = current_sheet.cell(row=r, column=c).value
-                    if not value:
-                        value = ""
-                    else:
+                    if value := current_sheet.cell(row=r, column=c).value:
                         temp_dict[dict_keys[c - 1]] = value
+                    else:
+                        value = ""
                 spreadsheet[ansible_sheet_name].append(temp_dict)
     except IOError:
-        return (1, "IOError on input file:%s" % input_file)
+        return 1, f"IOError on input file:{input_file}"
 
-    result["ansible_facts"] = spreadsheet
+    result = {"ansible_facts": spreadsheet}
     return (0, result)
 
 

@@ -94,19 +94,16 @@ def write_xls_dict(module, dest, create, workbook, worksheet, data):
     #     spreadsheet that gets created and save the file before exiting the module.
     # TODO: Add support for dry run mode and diff computation.
     """
-    # Variable to track if a change occured.
-    changed = False
     # Variable to track if a workbook was created.
     work_book_created = False
+    changed = False
     # Check if destination folder exists
     if not os.path.exists(dest):
         # Check if Create parameter is set to True
         if not create:
             # Module error message
             module.fail_json(
-                msg=f"Destination folder '{dest}' does not exist"
-                + "! Set create to 'True' to create the"
-                + "destination folder."
+                msg=f"Destination folder '{dest}' does not exist! Set create to 'True' to create thedestination folder."
             )
         # Try to create the destination folder.
         try:
@@ -117,33 +114,27 @@ def write_xls_dict(module, dest, create, workbook, worksheet, data):
         # raise exception and module error
         except Exception as err:
             module.fail_json(msg=f"Error creating {dest} ({err})")
-    # If destination folder already exists, check to see if the destination file
-    # exists
+    elif os.path.isfile(f"{dest}/{workbook}"):
+        # try to open the workbook and read all data
+        try:
+            work_book = openpyxl.load_workbook(f"{dest}/{workbook}", data_only=True)
+        # raise exception and module failure
+        except Exception as err:
+            module.fail_json(msg=f"Error creating {workbook} ({err})")
     else:
-        if not os.path.isfile(f"{dest}/{workbook}"):
             # Check if Create parameter is set to True
-            if not create:
-                module.fail_json(
-                    msg=f"Workbook '{workbook}' does not exist"
-                    + "! Set Create to 'True' to create"
-                    + "a new workbok."
-                )
-            # Try to open a workbook
-            try:
-                work_book = Workbook()
-                work_book_created = True
-                changed = True
-            # raise exception and module error
-            except Exception as err:
-                module.fail_json(msg=f"Error creating {workbook} ({err})")
-        # If the workbook already exists
-        else:
-            # try to open the workbook and read all data
-            try:
-                work_book = openpyxl.load_workbook(f"{dest}/{workbook}", data_only=True)
-            # raise exception and module failure
-            except Exception as err:
-                module.fail_json(msg=f"Error creating {workbook} ({err})")
+        if not create:
+            module.fail_json(
+                msg=f"Workbook '{workbook}' does not exist! Set Create to 'True' to createa new workbok."
+            )
+        # Try to open a workbook
+        try:
+            work_book = Workbook()
+            work_book_created = True
+            changed = True
+        # raise exception and module error
+        except Exception as err:
+            module.fail_json(msg=f"Error creating {workbook} ({err})")
     # If no new workbook was created
     if not work_book_created:
         # loop through all sheet names and match with sheetname passed from
@@ -159,19 +150,13 @@ def write_xls_dict(module, dest, create, workbook, worksheet, data):
     # Try to extract all key from the fist item in list. This will be used as
     # headers.
     try:
-        headers = []
-        for key, value in data[0].items():
-            headers.append(str(key))
+        headers = [str(key) for key, value in data[0].items()]
         work_sheet.append(headers)
-    # if the data is not a list of directoried, the module will error out with
-    # appropriate message
     except Exception as err:
         print(f"{err}: data must be a list of dictonaries.")
     # Loop through the list of data and write to spreadsheet.
     for entry in data:
-        data_write = []
-        for key, value in entry.items():
-            data_write.append(str(value))
+        data_write = [str(value) for key, value in entry.items()]
         work_sheet.append(data_write)
     # If a new workbook was created, delete the default sheet
     if work_book_created:
